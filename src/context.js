@@ -1,6 +1,11 @@
 import React, { Component } from "react";
-import items from "./data";
+// import items from "./data";
+import Client from "./Contentful";
 const RoomContext = React.createContext();
+
+// Client.getEntries({
+//   content_type: "beachResortRoom",
+// }).then((response) => console.log(response.items));
 
 //with that we have access for two component
 //1. provider: responsible for allowing for all components in the component tree to access it
@@ -25,26 +30,37 @@ export default class RoomProvider extends Component {
   };
 
   //getData
+  getData = async () => {
+    try {
+      let response = await Client.getEntries({
+        content_type: "beachResortRoom",
+        order: "fields.price",
+      });
+      let rooms = this.formateData(response.items);
+      console.log("rooms", rooms);
+      console.log(...rooms); //array hoy to ae ne
+      let featuredRooms = rooms.filter((room) => room.featured === true);
+      // console.log(featuredRooms);
+      let maxPrice = Math.max(...rooms.map((item) => item.price));
+
+      let maxSize = Math.max(...rooms.map((item) => item.size));
+      this.setState({
+        rooms,
+        featuredRooms,
+        sortedRooms: rooms,
+        loading: false,
+        price: maxPrice,
+        maxPrice: maxPrice,
+        maxSize: maxSize,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   componentDidMount() {
     //this.getData
-    let rooms = this.formateData(items);
-    console.log("rooms", rooms);
-    console.log(...rooms); //array hoy to ae ne
-    let featuredRooms = rooms.filter((room) => room.featured === true);
-    // console.log(featuredRooms);
-    let maxPrice = Math.max(...rooms.map((item) => item.price));
-
-    let maxSize = Math.max(...rooms.map((item) => item.size));
-    this.setState({
-      rooms,
-      featuredRooms,
-      sortedRooms: rooms,
-      loading: false,
-      price: maxPrice,
-      maxPrice: maxPrice,
-      maxSize: maxSize,
-    });
+    this.getData();
   }
 
   formateData(items) {
